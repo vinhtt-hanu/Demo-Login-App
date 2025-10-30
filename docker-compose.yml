@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: demo_login_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - demo-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: password
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+    networks:
+      - demo-network
+
+  backend:
+    build: ./backend
+    restart: always
+    environment:
+      NODE_ENV: development
+      DB_HOST: db
+      DB_USER: root
+      DB_PASSWORD: password
+      DB_NAME: demo_login_db
+      DB_PORT: 3306
+      JWT_SECRET: your_jwt_secret_key_here
+      PORT: 5001
+    ports:
+      - "5001:5001"
+    depends_on:
+      - db
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - demo-network
+    command: sh -c "npm run db:migrate && npm run db:seed:all && npm start"
+
+  frontend:
+    build: ./frontend
+    restart: always
+    environment:
+      REACT_APP_API_URL: http://localhost:5001/api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - demo-network
+
+volumes:
+  mysql_data:
+
+networks:
+  demo-network:
+    driver: bridge
