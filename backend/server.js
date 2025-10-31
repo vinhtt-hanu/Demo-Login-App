@@ -11,9 +11,10 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 // ✅ Cấu hình CORS
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3002'],   // domain frontend
-  credentials: true,                 // cho phép cookie/token qua header
+  origin: '*',           // Cho phép tất cả domain
+  credentials: false,    // ⚠️ Không thể dùng credentials (cookie, auth header) khi origin = '*'
 }));
+
 
 app.use(express.json());
 
